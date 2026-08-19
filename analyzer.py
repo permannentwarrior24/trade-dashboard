@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 
 from cli_utils import cli_command, cli_environment
+from process_utils import stop_process
+from security import sanitize_report_html
 
 
 class Analyzer:
@@ -19,7 +21,10 @@ class Analyzer:
         """Terminate the running Claude process."""
         self._cancelled = True
         if self._current_proc and self._current_proc.returncode is None:
-            self._current_proc.terminate()
+            try:
+                self._current_proc.terminate()
+            except ProcessLookupError:
+                pass
 
     @staticmethod
     def _extract_base_asset(symbol: str) -> str:
@@ -402,28 +407,35 @@ Composite = Pillar1 × 0.30 + Pillar2 × 0.40 + Pillar3 × 0.30
         self._cancelled = False
         returncode = None
 
+        process = None
         try:
             cmd = cli_command(
                 "claude", "--print", "--output-format", "text", env=self._env
             )
-            self._current_proc = await asyncio.create_subprocess_exec(
+            process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env=self._env,
             )
+            self._current_proc = process
             stdout, stderr = await asyncio.wait_for(
-                self._current_proc.communicate(input=prompt.encode()),
+                process.communicate(input=prompt.encode()),
                 timeout=self.TIMEOUT,
             )
-            returncode = self._current_proc.returncode
+            returncode = process.returncode
         except asyncio.TimeoutError:
+            await stop_process(process)
             return {"error": f"Analysis timed out after {self.TIMEOUT}s"}
+        except asyncio.CancelledError:
+            await stop_process(process)
+            raise
         except FileNotFoundError:
             return {"error": "claude CLI not found in PATH"}
         finally:
-            self._current_proc = None
+            if self._current_proc is process:
+                self._current_proc = None
 
         if self._cancelled:
             return {"error": "分析已取消"}
@@ -442,40 +454,5 @@ Composite = Pillar1 × 0.30 + Pillar2 × 0.40 + Pillar3 × 0.30
 
     @staticmethod
     def _sanitize_html(html: str) -> str:
-        """Clean up generated HTML for consistent styling.
-
-        - Remove <script> tags
-        - Strip ALL inline style attributes (styles come from CSS classes)
-        - Ensure alternating row classes on table rows
-        """
-        import re
-
-        # Remove <script> tags
-        html = re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
-
-        # Strip ALL inline style attributes — CSS classes handle styling
-        # Handle both single and double quoted style values, and unquoted
-        html = re.sub(r"""\s+style\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)""", "", html, flags=re.IGNORECASE)
-
-        # Add class="even" to alternating <tr> rows inside each <tbody>
-        def _add_even_rows(m):
-            tbody_content = m.group(1)
-            rows = re.findall(r'(<tr(?:\s[^>]*)?>.*?</tr>)', tbody_content, re.DOTALL | re.IGNORECASE)
-            if not rows:
-                return m.group(0)
-            new_rows = []
-            for i, row in enumerate(rows):
-                if i % 2 == 1 and 'class=' not in row[:row.index('>')]:
-                    row = re.sub(r'^<tr', '<tr class="even"', row, count=1)
-                new_rows.append(row)
-            rebuilt = '\n'.join(new_rows)
-            return f'<tbody>{rebuilt}</tbody>'
-
-        html = re.sub(
-            r'<tbody>(.*?)</tbody>',
-            _add_even_rows,
-            html,
-            flags=re.DOTALL | re.IGNORECASE,
-        )
-
-        return html
+        """Allow only the inert HTML subset used by report rendering."""
+        return sanitize_report_html(html)

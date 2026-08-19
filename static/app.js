@@ -210,7 +210,7 @@ function renderBalance(containerId, data) {
     const el = document.getElementById(containerId)?.querySelector(".card-content") || document.getElementById(containerId);
     const trading = data?.trading;
     if (!trading || trading.error) {
-        el.innerHTML = `<span class="loading">${trading?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(trading?.error || "无数据")}</span>`;
         return;
     }
 
@@ -233,7 +233,7 @@ function renderBalance(containerId, data) {
         if (eq < 0.01) return;
         const cls = i % 2 === 1 ? ' class="even"' : '';
         html += `<tr${cls}>
-            <td>${d.ccy}</td>
+            <td>${escHtml(d.ccy)}</td>
             <td class="num">${fmtNum(d.eq)}</td>
             <td class="num">${fmtNum(d.availBal)}</td>
             <td class="num">${fmtNum(d.frozenBal)}</td>
@@ -268,9 +268,9 @@ function renderPositions(containerId, data) {
         const uplClass = upl >= 0 ? "positive" : "negative";
         const lever = p.lever || p.leverage || "—";
         html += `<tr${cls}>
-            <td>${p.instId || p.symbol}</td>
+            <td>${escHtml(p.instId || p.symbol)}</td>
             <td class="${dirClass}">${side === "long" ? "做多" : "做空"}</td>
-            <td class="num">${p.pos || p.openSize || "—"}</td>
+            <td class="num">${escHtml(p.pos || p.openSize || "—")}</td>
             <td class="num">${fmtNum(p.avgPx || p.openAvgPrice)}</td>
             <td class="num">${lever}x</td>
             <td class="num ${uplClass}">${fmtNum(upl)}</td>
@@ -308,11 +308,11 @@ function renderOrders(containerId, data) {
         const cls = i % 2 === 1 ? ' class="even"' : '';
         const sideClass = o.side === "buy" ? "bullish" : "bearish";
         html += `<tr${cls}>
-            <td>${o.instId}</td>
-            <td>${o.ordType}</td>
+            <td>${escHtml(o.instId)}</td>
+            <td>${escHtml(o.ordType)}</td>
             <td class="${sideClass}">${o.side === "buy" ? "买入" : "卖出"}</td>
             <td class="num">${fmtNum(o.px)}</td>
-            <td class="num">${o.sz}</td>
+            <td class="num">${escHtml(o.sz)}</td>
         </tr>`;
     });
     html += "</tbody></table>";
@@ -322,7 +322,7 @@ function renderOrders(containerId, data) {
 function renderEarn(containerId, data) {
     const el = document.getElementById(containerId)?.querySelector(".card-content") || document.getElementById(containerId);
     if (!data || data.error) {
-        el.innerHTML = `<span class="loading">${data?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(data?.error || "无数据")}</span>`;
         return;
     }
 
@@ -348,7 +348,7 @@ function renderEarn(containerId, data) {
             const cls = i % 2 === 1 ? ' class="even"' : '';
             const rate = s.rate ? (parseFloat(s.rate) * 100).toFixed(2) + "%" : "—";
             html += `<tr${cls}>
-                <td>${s.ccy}</td>
+                <td>${escHtml(s.ccy)}</td>
                 <td class="num">${fmtNum(s.amt)}</td>
                 <td class="num positive">${fmtNum(s.earnings)}</td>
                 <td class="num">${rate}</td>
@@ -368,7 +368,7 @@ function renderEarn(containerId, data) {
             const stateClass = f.state === "earning" ? "bullish" : f.state === "pending" ? "neutral" : "";
             const maturity = f.maturityTime ? new Date(parseInt(f.maturityTime)).toLocaleDateString("zh-CN") : "—";
             html += `<tr${cls}>
-                <td>${f.ccy}</td>
+                <td>${escHtml(f.ccy)}</td>
                 <td class="num">${fmtNum(f.amt)}</td>
                 <td class="${stateClass}">${state}</td>
                 <td>${maturity}</td>
@@ -383,7 +383,7 @@ function renderEarn(containerId, data) {
 function renderBots(containerId, data) {
     const el = document.getElementById(containerId)?.querySelector(".card-content") || document.getElementById(containerId);
     if (!data || data.error) {
-        el.innerHTML = `<span class="loading">${data?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(data?.error || "无数据")}</span>`;
         return;
     }
 
@@ -414,12 +414,12 @@ function renderBots(containerId, data) {
             const floatClass = floatPnl >= 0 ? "positive" : "negative";
             const totalClass = totalPnl >= 0 ? "positive" : "negative";
             h += `<tr${cls}>
-                <td>${b.instId}</td>
-                <td class="${dirClass}">${dirMap[b.direction] || b.direction}</td>
+                <td>${escHtml(b.instId)}</td>
+                <td class="${dirClass}">${escHtml(dirMap[b.direction] || b.direction)}</td>
                 <td class="num">$${fmtNum(b.investment || b.sz)}</td>
                 <td class="num ${floatClass}">${fmtNum(b.floatProfit)} (${pnlRatio.toFixed(2)}%)</td>
                 <td class="num ${totalClass}">${fmtNum(b.totalPnl)}</td>
-                <td class="num">${b.gridNum}</td>
+                <td class="num">${escHtml(b.gridNum)}</td>
                 <td class="num">${b.actualLever ? parseFloat(b.actualLever).toFixed(1) + "x" : b.lever + "x"}</td>
             </tr>`;
         });
@@ -449,7 +449,7 @@ function renderBots(containerId, data) {
             const floatClass = floatPnl >= 0 ? "positive" : "negative";
             const totalClass = totalPnl >= 0 ? "positive" : "negative";
             html += `<tr${cls}>
-                <td>${b.instId}</td>
+                <td>${escHtml(b.instId)}</td>
                 <td class="${dirClass}">${b.direction === "long" ? "做多" : "做空"}</td>
                 <td class="num">$${fmtNum(b.investment || b.sz)}</td>
                 <td class="num ${floatClass}">${fmtNum(b.floatProfit)}</td>
@@ -538,8 +538,8 @@ function renderBalanceBitget(containerId, data) {
         const typeMap = { spot: "现货", futures: "合约", funding: "资金", earn: "赚币", bots: "策略", margin: "杠杆" };
         const usdVal = parseFloat(d.usdtEquity || 0);
         html += `<tr${cls}>
-            <td>${d.coin}</td>
-            <td>${typeMap[d.accountType] || d.accountType}</td>
+            <td>${escHtml(d.coin)}</td>
+            <td>${escHtml(typeMap[d.accountType] || d.accountType)}</td>
             <td class="num">${fmtNum(d.equity || d.usdtEquity)}</td>
             <td class="num">${fmtNum(d.available)}</td>
             <td class="num">${fmtNum(d.frozen)}</td>
@@ -587,7 +587,7 @@ function renderBitgetInvestments(containerId, data) {
         const chgClass = d.change24h != null ? (d.change24h >= 0 ? "positive" : "negative") : "";
         const chgText = d.change24h != null ? `${d.change24h >= 0 ? "+" : ""}${d.change24h.toFixed(2)}%` : "—";
         html += `<tr${cls}>
-            <td><strong>${d.coin}</strong></td>
+            <td><strong>${escHtml(d.coin)}</strong></td>
             <td class="num">${fmtNum(d.equity)}</td>
             <td class="num">$${fmtNum(d.usdtEquity)}</td>
             <td class="num ${chgClass}">${chgText}</td>
@@ -644,11 +644,11 @@ function renderOrdersBitget(containerId, data) {
         const cls = i % 2 === 1 ? ' class="even"' : '';
         const sideClass = o.side === "buy" ? "bullish" : "bearish";
         html += `<tr${cls}>
-            <td>${o.symbol || o.instId}</td>
-            <td>${o.orderType || o.ordType || "—"}</td>
+            <td>${escHtml(o.symbol || o.instId)}</td>
+            <td>${escHtml(o.orderType || o.ordType || "—")}</td>
             <td class="${sideClass}">${o.side === "buy" ? "买入" : "卖出"}</td>
             <td class="num">${fmtNum(o.price || o.px)}</td>
-            <td class="num">${o.size || o.sz}</td>
+            <td class="num">${escHtml(o.size || o.sz)}</td>
         </tr>`;
     });
     html += "</tbody></table>";
@@ -700,7 +700,7 @@ function renderEarnBitget(containerId, data) {
             if (amt < 0.01) return;
             const cls = i % 2 === 1 ? ' class="even"' : '';
             html += `<tr${cls}>
-                <td>${s.coin || s.ccy}</td>
+                <td>${escHtml(s.coin || s.ccy)}</td>
                 <td class="num">${fmtNum(s.amount || s.holdingAmount)}</td>
                 <td class="num">$${fmtNum(s.usdtEquity || s.amount)}</td>
             </tr>`;
@@ -714,8 +714,8 @@ function renderEarnBitget(containerId, data) {
         earn.forEach((e, i) => {
             const cls = i % 2 === 1 ? ' class="even"' : '';
             html += `<tr${cls}>
-                <td>${e.productName || e.productId || "—"}</td>
-                <td>${e.coin || e.ccy}</td>
+                <td>${escHtml(e.productName || e.productId || "—")}</td>
+                <td>${escHtml(e.coin || e.ccy)}</td>
                 <td class="num">${fmtNum(e.amount || e.holdingAmount)}</td>
                 <td class="num">$${fmtNum(e.usdtEquity || e.amount)}</td>
             </tr>`;
@@ -744,11 +744,11 @@ function renderPlanOrders(containerId, data) {
         const cls = i % 2 === 1 ? ' class="even"' : '';
         const sideClass = o.side === "buy" ? "bullish" : "bearish";
         html += `<tr${cls}>
-            <td>${o.symbol || o.instId}</td>
+            <td>${escHtml(o.symbol || o.instId)}</td>
             <td class="num">${fmtNum(o.triggerPrice || o.triggerPx)}</td>
             <td class="${sideClass}">${o.side === "buy" ? "买入" : "卖出"}</td>
             <td class="num">${fmtNum(o.executePrice || o.ordPx || o.price)}</td>
-            <td class="num">${o.size || o.sz}</td>
+            <td class="num">${escHtml(o.size || o.sz)}</td>
         </tr>`;
     });
     html += "</tbody></table>";
@@ -996,7 +996,7 @@ function renderTicker(data) {
     const el = document.getElementById("ticker-content");
     const t = Array.isArray(data) ? data[0] : data;
     if (!t || t.error) {
-        el.innerHTML = `<span class="loading">${t?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(t?.error || "无数据")}</span>`;
         return;
     }
 
@@ -1034,7 +1034,7 @@ function renderBitgetTicker(data) {
     const el = document.getElementById("ticker-content");
     const t = Array.isArray(data) ? data[0] : data;
     if (!t || t.error) {
-        el.innerHTML = `<span class="loading">${t?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(t?.error || "无数据")}</span>`;
         return;
     }
 
@@ -1120,7 +1120,7 @@ function renderBitgetIndicators(candles) {
     const el = document.getElementById("indicators-content");
     if (!el) return;
     if (!candles || candles.error) {
-        el.innerHTML = `<span class="loading">${candles?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(candles?.error || "无数据")}</span>`;
         return;
     }
     const raw = Array.isArray(candles) ? candles : (candles.data || []);
@@ -1339,7 +1339,7 @@ function renderDerivatives(fundingRate, openInterest) {
 function renderIndicators(data) {
     const el = document.getElementById("indicators-content");
     if (!data || data.error) {
-        el.innerHTML = `<span class="loading">${data?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(data?.error || "无数据")}</span>`;
         return;
     }
 
@@ -1435,7 +1435,7 @@ function formatIndicator(key, data) {
 function renderOrderflow(data) {
     const el = document.getElementById("orderflow-content");
     if (!data || data.error) {
-        el.innerHTML = `<span class="loading">${data?.error || "无数据"}</span>`;
+        el.innerHTML = `<span class="loading">${escHtml(data?.error || "无数据")}</span>`;
         return;
     }
 
@@ -1581,6 +1581,38 @@ async function cacheForAnalysis() {
     }, 2000);
 }
 
+function sanitizeReportHtml(value) {
+    const allowed = new Set([
+        "BR", "DIV", "EM", "H3", "H4", "H5", "HR", "LI", "P", "SPAN",
+        "STRONG", "TABLE", "TBODY", "TD", "TH", "THEAD", "TR", "UL",
+    ]);
+    const dropWithContent = new Set(["IFRAME", "MATH", "OBJECT", "SCRIPT", "STYLE", "SVG", "TEMPLATE"]);
+    const doc = new DOMParser().parseFromString(String(value || ""), "text/html");
+
+    function clean(parent) {
+        Array.from(parent.childNodes).forEach(node => {
+            if (node.nodeType !== Node.ELEMENT_NODE) return;
+            if (dropWithContent.has(node.tagName)) {
+                node.remove();
+                return;
+            }
+            if (!allowed.has(node.tagName)) {
+                const children = Array.from(node.childNodes);
+                node.replaceWith(...children);
+                clean(parent);
+                return;
+            }
+            Array.from(node.attributes).forEach(attr => {
+                if (attr.name !== "class") node.removeAttribute(attr.name);
+            });
+            clean(node);
+        });
+    }
+
+    clean(doc.body);
+    return doc.body.innerHTML;
+}
+
 function renderAnalysis(result) {
     const el = document.getElementById("analysis-content");
     const container = document.getElementById("analysis-result");
@@ -1589,8 +1621,8 @@ function renderAnalysis(result) {
     container.style.display = "block";
     if (empty) empty.style.display = "none";
 
-    const html = result.html || result.error || "无分析结果";
-    el.innerHTML = html;
+    const html = result.html || escHtml(result.error || "无分析结果");
+    el.innerHTML = sanitizeReportHtml(html);
 
     container.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -1602,7 +1634,7 @@ function saveToHistory(result) {
     history.unshift({
         id: result.id,
         symbol: result.symbol,
-        html: result.html,
+        html: sanitizeReportHtml(result.html),
         timestamp: result.timestamp,
     });
     if (history.length > 10) history.length = 10;
@@ -1613,27 +1645,41 @@ function saveToHistory(result) {
 async function loadHistory() {
     const el = document.getElementById("history-list");
     try {
-        const reports = await api("/api/reports");
+        const reports = (await api("/api/reports")).map(r => ({
+            ...r,
+            symbol: escHtml(String(r.symbol)),
+            displayTime: escHtml(new Date(r.timestamp).toLocaleString("zh-CN")),
+        }));
         if (!reports.length) {
             el.innerHTML = '<p class="loading">暂无分析历史</p>';
             return;
         }
-        el.innerHTML = reports.map(r => `
-            <div class="history-item" onclick="loadReport('${r.id}')">
-                <div class="meta">${r.symbol} — ${new Date(r.timestamp).toLocaleString("zh-CN")}</div>
+        el.innerHTML = reports.map((r, index) => `
+            <div class="history-item" data-report-index="${index}">
+                <div class="meta">${r.symbol} — ${r.displayTime}</div>
             </div>
         `).join("");
+        el.querySelectorAll("[data-report-index]").forEach(item => {
+            item.addEventListener("click", () => loadReport(reports[Number(item.dataset.reportIndex)].id));
+        });
     } catch (e) {
-        const history = JSON.parse(localStorage.getItem("analysis_history") || "[]");
+        const history = JSON.parse(localStorage.getItem("analysis_history") || "[]").map(h => ({
+            ...h,
+            symbol: escHtml(String(h.symbol)),
+            displayTime: escHtml(new Date(h.timestamp).toLocaleString("zh-CN")),
+        }));
         if (!history.length) {
             el.innerHTML = '<p class="loading">暂无分析历史</p>';
             return;
         }
         el.innerHTML = history.map((h, i) => `
-            <div class="history-item" onclick="showHistoryItem(${i})">
-                <div class="meta">${h.symbol} — ${new Date(h.timestamp).toLocaleString("zh-CN")}</div>
+            <div class="history-item" data-history-index="${i}">
+                <div class="meta">${h.symbol} — ${h.displayTime}</div>
             </div>
         `).join("");
+        el.querySelectorAll("[data-history-index]").forEach(item => {
+            item.addEventListener("click", () => showHistoryItem(Number(item.dataset.historyIndex)));
+        });
     }
 }
 
@@ -1646,7 +1692,7 @@ function showHistoryItem(index) {
 
 async function loadReport(id) {
     try {
-        const result = await api(`/api/reports/${id}`);
+        const result = await api(`/api/reports/${encodeURIComponent(id)}`);
         renderAnalysis(result);
     } catch (e) {
         showError("analysis-content", "加载报告失败: " + e.message);

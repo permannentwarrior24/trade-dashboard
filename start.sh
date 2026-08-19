@@ -17,10 +17,5 @@ if ! python3 -c "import fastapi, uvicorn, httpx, html2text, yfinance" 2>/dev/nul
     python3 -m pip install -q --user --break-system-packages -r requirements.txt
 fi
 
-# Load .env if present
-if [ -f .env ]; then
-    set -a; source .env; set +a
-fi
-
 echo "Starting Trade Dashboard on http://127.0.0.1:8501"
 python3 run_dashboard.py "$@"

@@ -1,5 +1,11 @@
 # Trade Dashboard
 
+> Security default: the server accepts only `localhost` and `127.0.0.1`
+> Host headers. If you intentionally expose it on a trusted LAN, set
+> `DASHBOARD_ALLOWED_HOSTS` to a comma-separated allow-list first. This dashboard
+> exposes account data and credential configuration, so do not publish it to the
+> internet without an authenticated reverse proxy.
+
 OKX 交易仪表盘 — 账户概览 + AI 行情分析的 Web 应用。
 
 ## 功能

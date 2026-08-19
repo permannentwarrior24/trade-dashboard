@@ -3,6 +3,7 @@ import json
 from typing import Any
 
 from cli_utils import cli_command, cli_environment
+from process_utils import stop_process
 
 
 class OKXClient:
@@ -19,6 +20,7 @@ class OKXClient:
         cmd = cli_command(
             "okx", "--profile", self.PROFILE, "--json", *args, env=self._env
         )
+        proc = None
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -30,7 +32,11 @@ class OKXClient:
                 proc.communicate(), timeout=self.TIMEOUT
             )
         except asyncio.TimeoutError:
+            await stop_process(proc)
             return {"error": f"Command timed out after {self.TIMEOUT}s", "cmd": " ".join(cmd)}
+        except asyncio.CancelledError:
+            await stop_process(proc)
+            raise
         except FileNotFoundError:
             return {"error": "okx CLI not found in PATH", "cmd": " ".join(cmd)}
 

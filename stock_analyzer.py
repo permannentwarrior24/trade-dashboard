@@ -5,12 +5,15 @@ from datetime import datetime
 import yfinance as yf
 
 from cli_utils import cli_command, cli_environment
+from process_utils import stop_process
+from security import sanitize_report_html
 
 
 class StockAnalyzer:
     """Stock-token specific analyzer using 3-pillar framework with US macro data."""
 
     TIMEOUT = 300  # seconds
+    MACRO_TIMEOUT = 45  # four Yahoo Finance requests, each bounded below
 
     MACRO_SYMBOLS = {
         "^VIX": "vix",
@@ -27,7 +30,10 @@ class StockAnalyzer:
     def cancel(self):
         self._cancelled = True
         if self._current_proc and self._current_proc.returncode is None:
-            self._current_proc.terminate()
+            try:
+                self._current_proc.terminate()
+            except ProcessLookupError:
+                pass
 
     @staticmethod
     def _extract_base_asset(symbol: str) -> str:
@@ -69,7 +75,11 @@ class StockAnalyzer:
     async def fetch_macro_data(self) -> dict:
         """Fetch US macro indicators from Yahoo Finance."""
         try:
-            return await asyncio.to_thread(self._fetch_macro_sync)
+            return await asyncio.wait_for(
+                asyncio.to_thread(self._fetch_macro_sync), timeout=self.MACRO_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            return {"error": f"Macro data timed out after {self.MACRO_TIMEOUT}s"}
         except Exception as e:
             return {"error": str(e)}
 
@@ -82,8 +92,7 @@ class StockAnalyzer:
                 if t is None:
                     result[key] = {"error": f"ticker {yf_sym} not found"}
                     continue
-                info = t.fast_info
-                hist = t.history(period="5d")
+                hist = t.history(period="5d", timeout=10)
                 if hist.empty:
                     result[key] = {"error": f"no history for {yf_sym}"}
                     continue
@@ -414,28 +423,35 @@ Composite = Pillar1 × 0.30 + Pillar2 × 0.40 + Pillar3 × 0.30
         prompt = self.build_prompt(market_data, macro_data, account_data)
         self._cancelled = False
 
+        process = None
         try:
             cmd = cli_command(
                 "claude", "--print", "--output-format", "text", env=self._env
             )
-            self._current_proc = await asyncio.create_subprocess_exec(
+            process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env=self._env,
             )
+            self._current_proc = process
             stdout, stderr = await asyncio.wait_for(
-                self._current_proc.communicate(input=prompt.encode()),
+                process.communicate(input=prompt.encode()),
                 timeout=self.TIMEOUT,
             )
-            returncode = self._current_proc.returncode
+            returncode = process.returncode
         except asyncio.TimeoutError:
+            await stop_process(process)
             return {"error": f"Analysis timed out after {self.TIMEOUT}s"}
+        except asyncio.CancelledError:
+            await stop_process(process)
+            raise
         except FileNotFoundError:
             return {"error": "claude CLI not found in PATH"}
         finally:
-            self._current_proc = None
+            if self._current_proc is process:
+                self._current_proc = None
 
         if self._cancelled:
             return {"error": "分析已取消"}
@@ -454,27 +470,4 @@ Composite = Pillar1 × 0.30 + Pillar2 × 0.40 + Pillar3 × 0.30
 
     @staticmethod
     def _sanitize_html(html: str) -> str:
-        import re
-        html = re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
-        html = re.sub(r"""\s+style\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)""", "", html, flags=re.IGNORECASE)
-
-        def _add_even_rows(m):
-            tbody_content = m.group(1)
-            rows = re.findall(r'(<tr(?:\s[^>]*)?>.*?</tr>)', tbody_content, re.DOTALL | re.IGNORECASE)
-            if not rows:
-                return m.group(0)
-            new_rows = []
-            for i, row in enumerate(rows):
-                if i % 2 == 1 and 'class=' not in row[:row.index('>')]:
-                    row = re.sub(r'^<tr', '<tr class="even"', row, count=1)
-                new_rows.append(row)
-            rebuilt = '\n'.join(new_rows)
-            return f'<tbody>{rebuilt}</tbody>'
-
-        html = re.sub(
-            r'<tbody>(.*?)</tbody>',
-            _add_even_rows,
-            html,
-            flags=re.DOTALL | re.IGNORECASE,
-        )
-        return html
+        return sanitize_report_html(html)

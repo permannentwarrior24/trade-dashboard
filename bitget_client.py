@@ -22,7 +22,14 @@ def _load_env_file():
             continue
         if "=" in line:
             key, _, value = line.partition("=")
-            key, value = key.strip(), value.strip().strip('"').strip("'")
+            key, value = key.strip(), value.strip()
+            if value.startswith('"'):
+                try:
+                    value = json.loads(value)
+                except json.JSONDecodeError:
+                    value = value.strip('"')
+            else:
+                value = value.strip("'")
             if key and value and key not in os.environ:
                 os.environ[key] = value
 
@@ -65,7 +72,7 @@ class BitgetClient:
     async def _request(self, method: str, path: str, params: dict | None = None, body: str = "") -> dict[str, Any]:
         if not self.configured:
             return {"error": "Bitget API credentials not configured"}
-        query = "&".join(f"{k}={v}" for k, v in params.items()) if params else ""
+        query = str(httpx.QueryParams(params)) if params else ""
         request_path = path + ("?" + query if query else "")
         url = self.BASE_URL + request_path
         headers = self._headers(method, request_path, body)
@@ -312,7 +319,7 @@ class BitgetClient:
 
     async def _public_get(self, path: str, params: dict | None = None) -> dict[str, Any]:
         """Public GET request — no API credentials needed."""
-        query = "&".join(f"{k}={v}" for k, v in params.items()) if params else ""
+        query = str(httpx.QueryParams(params)) if params else ""
         request_path = path + ("?" + query if query else "")
         url = self.BASE_URL + request_path
         try:
