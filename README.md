@@ -64,17 +64,46 @@ report2md.py        # 报告格式转换工具（JSON → Markdown）
 
 ## 启动
 
+### Windows 11（PowerShell）
+
+```powershell
+cd trade-dashboard
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+脚本会创建仓库本地的 `.venv`、安装 Python 依赖、启动服务，并在服务就绪后自动打开浏览器。
+
+### Linux
+
 ```bash
-# 一键启动（自动检查依赖、安装 Python 包）
 cd trade-dashboard
 bash start.sh
+```
 
-# 或手动
+两个入口都支持 `--no-browser`（不自动打开浏览器）和 `--reload`（开发时自动重载），例如：
+
+```powershell
+.\start.ps1 --reload
+```
+
+也可以在任意平台手动启动：
+
+```bash
 pip install -r requirements.txt
-uvicorn server:app --host 127.0.0.1 --port 8501 --reload
+python run_dashboard.py
 ```
 
 访问 http://127.0.0.1:8501
+
+## 跨平台仓库说明
+
+Windows 和 Linux 使用同一套 Python、HTML、JavaScript 源码，无需拆分仓库。系统差异仅保留在 `start.ps1` / `start.sh` 两个启动入口中；以下本机内容不会提交到 Git：
+
+- `.venv/`：每台电脑独立创建的 Python 虚拟环境
+- `.env`：Bitget 密钥和本机代理配置
+- `reports/`、`cache/`：本机生成的数据
+
+`okx` 与 `claude` CLI 没有安装时，网页仍能打开，但依赖它们的行情、账户和 AI 报告功能不可用。
 
 ## 使用
 

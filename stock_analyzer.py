@@ -1,9 +1,10 @@
 import asyncio
 import json
-import os
 from datetime import datetime
 
 import yfinance as yf
+
+from cli_utils import cli_command, cli_environment
 
 
 class StockAnalyzer:
@@ -19,10 +20,7 @@ class StockAnalyzer:
     }
 
     def __init__(self):
-        self._env = os.environ.copy()
-        npm_global = os.path.expanduser("~/.npm-global/bin")
-        if npm_global not in self._env.get("PATH", ""):
-            self._env["PATH"] = f"{npm_global}:{self._env.get('PATH', '')}"
+        self._env = cli_environment()
         self._current_proc = None
         self._cancelled = False
 
@@ -417,8 +415,11 @@ Composite = Pillar1 × 0.30 + Pillar2 × 0.40 + Pillar3 × 0.30
         self._cancelled = False
 
         try:
+            cmd = cli_command(
+                "claude", "--print", "--output-format", "text", env=self._env
+            )
             self._current_proc = await asyncio.create_subprocess_exec(
-                "claude", "--print", "--output-format", "text",
+                *cmd,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,

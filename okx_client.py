@@ -1,7 +1,8 @@
 import asyncio
 import json
-import os
 from typing import Any
+
+from cli_utils import cli_command, cli_environment
 
 
 class OKXClient:
@@ -11,14 +12,13 @@ class OKXClient:
     TIMEOUT = 10  # seconds per CLI call
 
     def __init__(self):
-        self._env = os.environ.copy()
-        npm_global = os.path.expanduser("~/.npm-global/bin")
-        if npm_global not in self._env.get("PATH", ""):
-            self._env["PATH"] = f"{npm_global}:{self._env.get('PATH', '')}"
+        self._env = cli_environment()
 
     async def run_cli(self, *args: str) -> dict[str, Any]:
         """Run `okx --json <args>` and return parsed JSON."""
-        cmd = ["okx", "--profile", self.PROFILE, "--json"] + list(args)
+        cmd = cli_command(
+            "okx", "--profile", self.PROFILE, "--json", *args, env=self._env
+        )
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd,

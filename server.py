@@ -1,6 +1,5 @@
 import asyncio
 import json
-import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -14,6 +13,7 @@ from pydantic import BaseModel
 from okx_client import OKXClient
 from bitget_client import BitgetClient
 from analyzer import Analyzer
+from cli_utils import cli_available
 from stock_analyzer import StockAnalyzer
 
 app = FastAPI(title="Trade Dashboard")
@@ -40,9 +40,9 @@ CACHE_DIR.mkdir(exist_ok=True)
 @app.on_event("startup")
 async def startup():
     issues = []
-    if not shutil.which("okx"):
+    if not cli_available("okx"):
         issues.append("okx CLI not found. Install: npm install -g @okx_ai/okx-trade-cli")
-    if not shutil.which("claude"):
+    if not cli_available("claude"):
         issues.append("claude CLI not found. Install: npm install -g @anthropic-ai/claude-code")
     if not bitget.configured:
         issues.append("Bitget API credentials not set (BITGET_API_KEY, BITGET_SECRET_KEY, BITGET_PASSPHRASE)")
@@ -397,8 +397,8 @@ async def cache_market_data(inst_id: str, include_account: bool = True):
 
 @app.get("/api/health")
 async def health():
-    okx_ok = shutil.which("okx") is not None
-    claude_ok = shutil.which("claude") is not None
+    okx_ok = cli_available("okx")
+    claude_ok = cli_available("claude")
     bitget_ok = bitget.configured
     return {"okx": okx_ok, "claude": claude_ok, "bitget": bitget_ok}
 
