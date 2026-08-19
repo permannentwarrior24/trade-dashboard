@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>Trade Dashboard</h1>
+        <nav>
+            <a href="/" class="nav-active">账户概览</a>
+            <a href="/market">行情分析</a>
+        </nav>
+        <div class="header-actions">
+            <button id="btn-refresh" onclick="refreshAll()">刷新数据</button>
+            <span id="status-indicator" class="status-dot"></span>
+        </div>
+    </header>
+
+    <main class="account-layout">
+        <!-- 总资产估值 (全宽) -->
+        <div id="account-valuation" class="card">
+            <h3>总资产估值</h3>
+            <div id="valuation-content" class="loading">加载中...</div>
+        </div>
+
+        <!-- 双栏: OKX + Bitget -->
+        <section class="exchange-columns">
+            <div class="exchange-col">
+                <h2 class="exchange-header exchange-okx">OKX</h2>
+
+                <div id="okx-positions" class="card">
+                    <h3>当前持仓</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="okx-bots" class="card">
+                    <h3>交易机器人</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="okx-orders" class="card">
+                    <h3>挂单</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="okx-earn" class="card">
+                    <h3>赚币理财</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="okx-balance" class="card">
+                    <h3>余额明细</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+            </div>
+
+            <div class="exchange-col">
+                <h2 class="exchange-header exchange-bitget">Bitget <span id="bitget-status" style="font-size:12px;font-weight:normal;margin-left:8px"></span></h2>
+
+                <div id="bitget-config" class="card" style="display:none">
+                    <h3>API 配置</h3>
+                    <div class="card-content">
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                            <input id="bg-api-key" type="password" placeholder="API Key" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text);font-size:13px">
+                            <input id="bg-secret" type="password" placeholder="Secret Key" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text);font-size:13px">
+                            <input id="bg-passphrase" type="password" placeholder="Passphrase" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text);font-size:13px">
+                            <div style="display:flex;gap:8px">
+                                <button onclick="saveBitgetCreds()" style="padding:6px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:13px">保存并测试</button>
+                                <button onclick="document.getElementById('bitget-config').style.display='none'" style="padding:6px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text);cursor:pointer;font-size:13px">取消</button>
+                            </div>
+                            <span id="bg-config-msg" style="font-size:12px"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bitget-positions" class="card">
+                    <h3>当前持仓</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="bitget-investments" class="card">
+                    <h3>投资持仓</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="bitget-balance" class="card">
+                    <h3>余额明细</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="bitget-bots" class="card">
+                    <h3>策略单</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="bitget-orders" class="card">
+                    <h3>挂单</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+
+                <div id="bitget-earn" class="card">
+                    <h3>赚币理财</h3>
+                    <div class="card-content loading">加载中...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="loading-overlay" class="loading-overlay" style="display:none">
+        <div class="spinner"></div>
+        <p id="loading-text">正在分析...</p>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行情分析 - Trade Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+    // Load KLineChart with fallback CDN
+    (function() {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/klinecharts@9.8.12/dist/umd/klinecharts.min.js';
+        s.onload = function() { console.log('KLineChart loaded via jsDelivr'); };
+        s.onerror = function() {
+            console.warn('jsDelivr failed, trying bootcdn...');
+            var s2 = document.createElement('script');
+            s2.src = 'https://cdn.bootcdn.net/ajax/libs/klinecharts/9.8.12/klinecharts.min.js';
+            s2.onload = function() { console.log('KLineChart loaded via bootcdn'); };
+            s2.onerror = function() {
+                console.error('All CDNs failed for KLineChart');
+                document.getElementById('kline-container').innerHTML =
+                    '<div style="padding:40px;text-align:center;color:#999;">' +
+                    '<p>⚠️ KLineChart 库加载失败</p>' +
+                    '<p style="font-size:12px;margin-top:8px;">所有 CDN 不可用，请检查网络或手动下载到 static/ 目录</p></div>';
+            };
+            document.head.appendChild(s2);
+        };
+        document.head.appendChild(s);
+    })();
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Trade Dashboard</h1>
+        <nav>
+            <a href="/">账户概览</a>
+            <a href="/market" class="nav-active">行情分析</a>
+        </nav>
+        <div class="header-actions">
+            <button id="btn-refresh" onclick="refreshAll()">刷新数据</button>
+            <button id="btn-analyze" onclick="startAnalysis()" class="primary">开始分析</button>
+            <button id="btn-cache" onclick="cacheForAnalysis()" title="缓存当前市场+账户数据供 Claude Code 使用">缓存数据</button>
+            <span id="status-indicator" class="status-dot"></span>
+        </div>
+    </header>
+
+    <main class="market-layout">
+        <section class="panel market-panel">
+            <h2>行情分析</h2>
+
+            <div class="symbol-tabs" id="symbol-tabs">
+                <button class="tab active" data-symbol="BTC-USDT">BTC</button>
+                <button class="tab" data-symbol="ETH-USDT">ETH</button>
+                <button class="tab" data-symbol="XAU-USDT-SWAP">XAU</button>
+                <button class="tab" data-symbol="QQQ-USDT-SWAP">QQQ</button>
+            </div>
+
+            <div id="market-ticker" class="card">
+                <h3>市场快照</h3>
+                <div id="ticker-content" class="loading">选择币种查看行情</div>
+            </div>
+
+            <div id="market-chart" class="card">
+                <h3>K线图</h3>
+                <div class="chart-controls">
+                    <div class="timeframe-tabs" id="timeframe-tabs">
+                        <button class="tf-tab" data-bar="1m">1m</button>
+                        <button class="tf-tab" data-bar="5m">5m</button>
+                        <button class="tf-tab" data-bar="15m">15m</button>
+                        <button class="tf-tab" data-bar="30m">30m</button>
+                        <button class="tf-tab active" data-bar="1H">1H</button>
+                        <button class="tf-tab" data-bar="4H">4H</button>
+                        <button class="tf-tab" data-bar="1D">1D</button>
+                    </div>
+                    <div class="indicator-toggles" id="indicator-toggles">
+                        <button class="ind-btn active" data-indicator="MA">MA</button>
+                        <button class="ind-btn" data-indicator="VOL">VOL</button>
+                        <button class="ind-btn" data-indicator="MACD">MACD</button>
+                        <button class="ind-btn" data-indicator="RSI">RSI</button>
+                        <button class="ind-btn" data-indicator="BOLL">BOLL</button>
+                        <button class="ind-btn" data-indicator="KDJ">KDJ</button>
+                    </div>
+                </div>
+                <div id="kline-container" style="width:100%;height:420px;"></div>
+            </div>
+
+            <div id="market-derivatives" class="card">
+                <h3>衍生品数据</h3>
+                <div id="derivatives-content" class="loading">选择币种查看</div>
+            </div>
+
+            <div id="market-indicators" class="card">
+                <h3>技术指标（多时间框架）</h3>
+                <div id="indicators-content" class="loading">选择币种查看指标</div>
+            </div>
+
+            <div id="market-orderflow" class="card">
+                <h3>订单簿 & 成交流</h3>
+                <div id="orderflow-content" class="loading">选择币种查看订单流</div>
+            </div>
+        </section>
+
+        <section class="panel right-panel">
+            <h2>AI 分析报告</h2>
+
+            <div id="analysis-result" class="card" style="display:none">
+                <div id="analysis-content"></div>
+            </div>
+
+            <div id="analysis-empty" class="card">
+                <p class="loading">点击「开始分析」生成报告</p>
+            </div>
+
+            <div id="history-section">
+                <h3>分析历史 <button class="toggle-btn" onclick="toggleHistory()">展开/折叠</button></h3>
+                <div id="history-list" class="collapsed"></div>
+            </div>
+        </section>
+    </main>
+
+    <div id="loading-overlay" class="loading-overlay" style="display:none">
+        <div class="spinner"></div>
+        <p id="loading-text">正在分析...</p>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
